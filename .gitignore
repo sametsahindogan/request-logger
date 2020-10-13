@@ -1,0 +1,8 @@
+.env.backup
+/.idea
+/.vscode
+/.vagrant
+.DS_Store
+Thumbs.db
+.env
+*.log
