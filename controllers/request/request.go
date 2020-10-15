@@ -46,12 +46,13 @@ func (h RequestController) Store(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, scsResponse.Response(make(map[string]string)))
+	c.JSON(http.StatusOK, scsResponse.Response(make(map[string]string), make(map[string]string)))
 
 	return
 }
 
 func (h RequestController) GetByDomain(c *gin.Context) {
+
 	request := requestTypes.GetByDomainRequestValidation{}
 
 	request.Domain = c.DefaultQuery("domain", "")
@@ -85,12 +86,14 @@ func (h RequestController) GetByDomain(c *gin.Context) {
 
 	repository := requestRepository.RequestRepository{}
 
-	results, err := repository.GetByDomainName(&request)
+	results, information, err := repository.GetByDomainName(&request)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errResponse.NewErrorResponse(5, "Error", err.Error(), []string{}))
 		return
 	}
 
-	c.JSON(http.StatusOK, scsResponse.Response(results))
+	c.JSON(http.StatusOK, scsResponse.Response(results, information))
+
+	return
 }

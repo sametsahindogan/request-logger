@@ -31,7 +31,7 @@ func (r RequestRepository) Create(request *requestTypes.StoreProcessRequestValid
 	return err
 }
 
-func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequestValidation) ([]requestModel.Request, error) {
+func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequestValidation) ([]requestModel.Request, map[string]interface{}, error) {
 
 	data := requestModel.Request{}
 	data.Domain = request.Domain
@@ -53,9 +53,15 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 		query["user_id"] = data.UserId
 	}
 
+	total, err := requestModel.NewRequest().CountDocuments(context.TODO(), query)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
 	queryOptions := options.Find()
-	queryOptions.SetLimit(request.Limit)
 	queryOptions.SetSkip(request.Offset)
+	queryOptions.SetLimit(request.Limit)
 	sort := 1
 	if request.Sort == "DESC" {
 		sort = -1
@@ -63,10 +69,10 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 
 	queryOptions.SetSort(bson.M{"created_at": sort})
 
-	cursor, err := requestModel.NewRequest().Find(context.TODO(), query, queryOptions)
+	cursor, errs := requestModel.NewRequest().Find(context.TODO(), query, queryOptions)
 
-	if err != nil {
-		return nil, err
+	if errs != nil {
+		return nil, nil, err
 	}
 
 	var results []requestModel.Request
@@ -82,7 +88,14 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 		results = append(results, mapping)
 	}
 
-	return results, nil
+	queryInformation := map[string]interface{}{
+		"total":        total,
+		"offset":       request.Offset,
+		"limit":        request.Limit,
+		"current_rows": len(results),
+	}
+
+	return results, queryInformation, nil
 }
 
 func requestHasDate(time time.Time) bool {
