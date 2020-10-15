@@ -1,8 +1,8 @@
 package main
 
 import (
-	"request-logger/bootstrap/database"
-	"request-logger/bootstrap/server"
+	"request-logger/database"
+	"request-logger/server"
 )
 
 func main() {

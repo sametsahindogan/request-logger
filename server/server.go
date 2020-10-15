@@ -5,7 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
-	"request-logger/bootstrap/route"
+	"request-logger/route"
 )
 
 func Initialize() {

@@ -10,6 +10,18 @@ import (
 )
 
 func NewRouter() *gin.Engine {
+
+	routes := bootstrapGinFramework()
+
+	requestController := new(request.RequestController)
+
+	routes.POST("/", requestController.Store)
+	routes.GET("/list", requestController.GetByDomain)
+
+	return routes
+}
+
+func bootstrapGinFramework() *gin.Engine {
 	err := godotenv.Load()
 
 	if err != nil {
@@ -31,11 +43,6 @@ func NewRouter() *gin.Engine {
 	routes.Use(gin.Logger())
 
 	routes.Use(gin.Recovery())
-
-	requestController := new(request.RequestController)
-
-	routes.POST("/", requestController.Store)
-	routes.GET("/list", requestController.GetByDomain)
 
 	return routes
 }

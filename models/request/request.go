@@ -2,7 +2,7 @@ package request
 
 import (
 	"go.mongodb.org/mongo-driver/mongo"
-	"request-logger/bootstrap/database"
+	"request-logger/database"
 	"time"
 )
 
