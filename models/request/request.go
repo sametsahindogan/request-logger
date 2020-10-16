@@ -1,6 +1,7 @@
 package request
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"request-logger/database"
 	"time"
@@ -9,11 +10,12 @@ import (
 var CollectionName = "requests"
 
 type Request struct {
-	UserId    string    `bson:"user_id"`
-	IpAddress string    `bson:"ip_address"`
-	Uri       string    `bson:"uri"`
-	Domain    string    `bson:"domain"`
-	CreatedAt time.Time `bson:"created_at"`
+	Id        primitive.ObjectID `bson:"_id"`
+	UserId    string             `bson:"user_id"`
+	IpAddress string             `bson:"ip_address"`
+	Uri       string             `bson:"uri"`
+	Domain    string             `bson:"domain"`
+	CreatedAt time.Time          `bson:"created_at"`
 }
 
 /*func (r Request) Formatted(tag string, request *Request) map[string]interface{} {

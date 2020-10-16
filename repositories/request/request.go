@@ -3,6 +3,7 @@ package request
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"reflect"
@@ -16,6 +17,7 @@ type RequestRepository struct{}
 func (r RequestRepository) Create(request *requestTypes.StoreProcessRequestValidation) error {
 
 	data := requestModel.Request{}
+	data.Id = primitive.NewObjectID()
 	data.UserId = request.UserId
 	data.IpAddress = request.IpAddress
 	data.Uri = request.Uri
@@ -53,15 +55,20 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 		query["user_id"] = data.UserId
 	}
 
-	total, err := requestModel.NewRequest().CountDocuments(context.TODO(), query)
+	model := requestModel.NewRequest()
+
+	total, err := model.CountDocuments(context.TODO(), query)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
+	page := request.Page
+	perPage := request.PerPage
+
 	queryOptions := options.Find()
-	queryOptions.SetSkip(request.Offset)
-	queryOptions.SetLimit(request.Limit)
+	queryOptions.SetSkip((page - 1) * perPage)
+	queryOptions.SetLimit(perPage)
 	sort := 1
 	if request.Sort == "DESC" {
 		sort = -1
@@ -69,10 +76,10 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 
 	queryOptions.SetSort(bson.M{"created_at": sort})
 
-	cursor, errs := requestModel.NewRequest().Find(context.TODO(), query, queryOptions)
+	cursor, errs := model.Find(context.TODO(), query, queryOptions)
 
 	if errs != nil {
-		return nil, nil, err
+		return nil, nil, errs
 	}
 
 	var results []requestModel.Request
@@ -88,11 +95,19 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 		results = append(results, mapping)
 	}
 
+	totalPage := total / perPage
+
+	if (total % perPage) != 0 {
+		totalPage++
+	}
+
 	queryInformation := map[string]interface{}{
-		"total":        total,
-		"offset":       request.Offset,
-		"limit":        request.Limit,
-		"current_rows": len(results),
+		"total_rows":    total,
+		"current_rows":  int64(len(results)),
+		"page":          page,
+		"per_page":      perPage,
+		"total_page":    totalPage,
+		"has_next_page": total > (page * perPage),
 	}
 
 	return results, queryInformation, nil

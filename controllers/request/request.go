@@ -73,8 +73,8 @@ func (h RequestController) GetByDomain(c *gin.Context) {
 	}
 
 	request.UserId = c.DefaultQuery("user", "")
-	request.Limit, _ = strconv.ParseInt(c.DefaultQuery("limit", "10"), 0, 64)
-	request.Offset, _ = strconv.ParseInt(c.DefaultQuery("offset", "0"), 0, 64)
+	request.PerPage, _ = strconv.ParseInt(c.DefaultQuery("per-page", "10"), 0, 64)
+	request.Page, _ = strconv.ParseInt(c.DefaultQuery("page", "1"), 0, 64)
 	request.Sort = c.DefaultQuery("sort", "DESC")
 
 	validate := validator.New()

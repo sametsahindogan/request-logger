@@ -3,10 +3,10 @@ package request
 import "time"
 
 type GetByDomainRequestValidation struct {
+	UserId  string
 	Domain  string `validate:"required,url"`
 	Created time.Time
-	UserId  string
-	Limit   int64 `validate:"max=100"`
-	Offset  int64
+	PerPage int64 `validate:"max=100"`
+	Page    int64
 	Sort    string
 }
