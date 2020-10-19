@@ -14,7 +14,7 @@ go run main.go
 
 ## Authentication:
 
-Perform the HTTP basic authentication with the credentials in your `.env` file.
+HTTP basic authentication with the credentials in your `.env` file.
 
 ## Create Request Log:
 
