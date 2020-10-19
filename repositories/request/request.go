@@ -35,24 +35,25 @@ func (r RequestRepository) Create(request *requestTypes.StoreProcessRequestValid
 
 func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequestValidation) ([]requestModel.Request, map[string]interface{}, error) {
 
-	data := requestModel.Request{}
-	data.Domain = request.Domain
-
-	query := bson.M{"domain": data.Domain}
+	query := bson.M{"domain": request.Domain}
 
 	if requestHasDate(request.Created) {
-		data.CreatedAt = request.Created
-
 		query["created_at"] = bson.M{
-			"$lt":  data.CreatedAt.AddDate(0, 0, 1),
-			"$gte": data.CreatedAt,
+			"$lt":  request.Created.AddDate(0, 0, 1),
+			"$gte": request.Created,
 		}
 	}
 
 	if request.UserId != "" {
-		data.UserId = request.UserId
+		query["user_id"] = request.UserId
+	}
 
-		query["user_id"] = data.UserId
+	if request.Uri != "" {
+		query["uri"] = request.Uri
+	}
+
+	if request.Ip != "" {
+		query["ip_address"] = request.Ip
 	}
 
 	model := requestModel.NewRequest()
@@ -63,18 +64,7 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 		return nil, nil, err
 	}
 
-	page := request.Page
-	perPage := request.PerPage
-
-	queryOptions := options.Find()
-	queryOptions.SetSkip((page - 1) * perPage)
-	queryOptions.SetLimit(perPage)
-	sort := 1
-	if request.Sort == "DESC" {
-		sort = -1
-	}
-
-	queryOptions.SetSort(bson.M{"created_at": sort})
+	queryOptions, page, perPage := prepareQueryOptions(request)
 
 	cursor, errs := model.Find(context.TODO(), query, queryOptions)
 
@@ -95,19 +85,13 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 		results = append(results, mapping)
 	}
 
-	totalPage := total / perPage
-
-	if (total % perPage) != 0 {
-		totalPage++
-	}
-
 	queryInformation := map[string]interface{}{
-		"total_rows":    total,
-		"current_rows":  int64(len(results)),
-		"page":          page,
-		"per_page":      perPage,
-		"total_page":    totalPage,
-		"has_next_page": total > (page * perPage),
+		"totalRows":   total,
+		"currentRows": int64(len(results)),
+		"page":        page,
+		"perPage":     perPage,
+		"totalPage":   getTotalPage(total, perPage),
+		"hasNextPage": total > (page * perPage),
 	}
 
 	return results, queryInformation, nil
@@ -115,4 +99,32 @@ func (r RequestRepository) GetByDomainName(request *requestTypes.GetByDomainRequ
 
 func requestHasDate(time time.Time) bool {
 	return !reflect.DeepEqual(time, reflect.Zero(reflect.TypeOf(time)).Interface())
+}
+
+func getTotalPage(total int64, perPage int64) int64 {
+
+	totalPage := total / perPage
+
+	if (total % perPage) != 0 {
+		totalPage++
+	}
+
+	return totalPage
+}
+
+func prepareQueryOptions(request *requestTypes.GetByDomainRequestValidation) (*options.FindOptions, int64, int64) {
+	page := request.Page
+	perPage := request.PerPage
+
+	queryOptions := options.Find()
+	queryOptions.SetSkip((page - 1) * perPage)
+	queryOptions.SetLimit(perPage)
+	sort := 1
+	if request.Sort == "DESC" {
+		sort = -1
+	}
+
+	queryOptions.SetSort(bson.M{"created_at": sort})
+
+	return queryOptions, page, perPage
 }

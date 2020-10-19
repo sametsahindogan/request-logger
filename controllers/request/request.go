@@ -60,8 +60,6 @@ func (h RequestController) GetByDomain(c *gin.Context) {
 	date := c.DefaultQuery("date", "")
 
 	if date != "" {
-
-		// year-month-day
 		formattedTime, err := time.Parse("2006-01-02", date)
 
 		if err != nil {
@@ -73,6 +71,8 @@ func (h RequestController) GetByDomain(c *gin.Context) {
 	}
 
 	request.UserId = c.DefaultQuery("user", "")
+	request.Uri = c.DefaultQuery("uri", "")
+	request.Ip = c.DefaultQuery("ip", "")
 	request.PerPage, _ = strconv.ParseInt(c.DefaultQuery("per-page", "10"), 0, 64)
 	request.Page, _ = strconv.ParseInt(c.DefaultQuery("page", "1"), 0, 64)
 	request.Sort = c.DefaultQuery("sort", "DESC")
