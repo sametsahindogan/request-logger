@@ -5,8 +5,10 @@ import (
 	"github.com/joho/godotenv"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"request-logger/controllers/request"
+	errResponse "request-logger/helpers/response/error"
 )
 
 func NewRouter() *gin.Engine {
@@ -15,8 +17,8 @@ func NewRouter() *gin.Engine {
 
 	requestController := new(request.RequestController)
 
-	routes.POST("/", requestController.Store)
-	routes.GET("/list", requestController.GetByDomain)
+	routes.POST("/", basicAuthentication, requestController.Store)
+	routes.GET("/list", basicAuthentication, requestController.GetByDomain)
 
 	return routes
 }
@@ -45,4 +47,18 @@ func bootstrapGinFramework() *gin.Engine {
 	routes.Use(gin.Recovery())
 
 	return routes
+}
+
+func basicAuthentication(c *gin.Context) {
+	_ = godotenv.Load()
+
+	apiKey, apiSecret, hasAuth := c.Request.BasicAuth()
+
+	if hasAuth && apiKey == os.Getenv("API_KEY") && apiSecret == os.Getenv("API_SECRET") {
+		c.Next()
+	} else {
+		c.Abort()
+		c.JSON(http.StatusInternalServerError, errResponse.NewErrorResponse(5, "Error", "Authentication failure.", []string{}))
+		return
+	}
 }
