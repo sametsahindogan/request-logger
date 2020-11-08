@@ -35,7 +35,7 @@ Request Type: **GET**
 
 | Param | Type | Example |
 | - | - | - |
-| domain | String (Required) | "String" |
+| domain | String (Required) | "http://example.com" |
 | user | String | "424" |
 | uri | String | "/products" |
 | ip | String | "127.0.0.1" |
